@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/todos": {
+        "/todo": {
             "get": {
-                "description": "Get a list of todos, optionally filtered by status",
+                "description": "Получение списка todo, опционально можно отфильтровать по статусу",
                 "consumes": [
                     "application/json"
                 ],
@@ -55,7 +55,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new todo with the input payload",
+                "description": "Создание нового todo\ntitle должен быть не короче 3",
                 "consumes": [
                     "application/json"
                 ],
@@ -68,30 +68,12 @@ const docTemplate = `{
                 "summary": "Create a new todo",
                 "parameters": [
                     {
-                        "description": "Title of the Todo",
-                        "name": "title",
+                        "description": "Create Todo",
+                        "name": "todo",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Body of the Todo",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Status of the Todo",
-                        "name": "status",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/controllers.body"
                         }
                     }
                 ],
@@ -103,17 +85,20 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             }
         },
-        "/todos/{id}": {
+        "/todo/{id}": {
             "get": {
-                "description": "Get details of a todo by ID",
+                "description": "Получение todo по id",
                 "consumes": [
                     "application/json"
                 ],
@@ -143,13 +128,16 @@ const docTemplate = `{
                     "404": {
                         "description": "Todo not found",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             },
             "put": {
-                "description": "Update a todo with the specified ID",
+                "description": "Обновление todo по id",
                 "consumes": [
                     "application/json"
                 ],
@@ -169,27 +157,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Title of the Todo",
-                        "name": "title",
+                        "description": "Update Todo",
+                        "name": "todo",
                         "in": "body",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Body of the Todo",
-                        "name": "body",
-                        "in": "body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Status of the Todo",
-                        "name": "status",
-                        "in": "body",
-                        "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/controllers.body"
                         }
                     }
                 ],
@@ -203,13 +175,16 @@ const docTemplate = `{
                     "404": {
                         "description": "Todo not found",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Delete a todo with the specified ID",
+                "description": "Удаление todo по id",
                 "consumes": [
                     "application/json"
                 ],
@@ -239,7 +214,10 @@ const docTemplate = `{
                     "404": {
                         "description": "Todo not found",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -247,6 +225,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.body": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "gorm.DeletedAt": {
             "type": "object",
             "properties": {

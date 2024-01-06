@@ -9,34 +9,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type body struct {
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	Status bool   `json:"status"`
+}
+
 // ToDoCreate godoc
 // @Summary Create a new todo
-// @Description Create a new todo with the input payload
+// @Description Создание нового todo
+// @Description title должен быть не короче 3
 // @Tags todos
 // @Accept  json
 // @Produce  json
-// @Param title body string true "Title of the Todo"
-// @Param body body string true "Body of the Todo"
-// @Param status body bool true "Status of the Todo"
+// @Param todo body body true "Create Todo"
 // @Success 201 {object} models.ToDo "Successfully created"
-// @Failure 400 {string} string "Invalid request"
-// @Router /todos [post]
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Router /todo [post]
 func ToDoCreate(c *gin.Context) {
 	//Get data
-	var body struct {
-		Title  string
-		Body   string
-		Status bool
-	}
+	var body body
 
 	c.Bind(&body)
+
+	if len(body.Title) < 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат todo"})
+		return
+	}
 
 	//Create a ToDo
 	todo := models.ToDo{Title: body.Title, Body: body.Body, Status: body.Status}
 	result := initializers.DB.Create(&todo)
 
 	if result.Error != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат todo"})
 		return
 	}
 
@@ -48,14 +54,14 @@ func ToDoCreate(c *gin.Context) {
 
 // ToDoIndex godoc
 // @Summary List todos
-// @Description Get a list of todos, optionally filtered by status
+// @Description Получение списка todo, опционально можно отфильтровать по статусу
 // @Tags todos
 // @Accept  json
 // @Produce  json
 // @Param status query bool false "Filter by status"
 // @Success 200 {array} models.ToDo "List of todos"
 // @Failure 500 {string} string "Internal server error"
-// @Router /todos [get]
+// @Router /todo [get]
 func ToDoIndex(c *gin.Context) {
 	//Get data
 	var todos []models.ToDo
@@ -65,7 +71,7 @@ func ToDoIndex(c *gin.Context) {
 	if status != "" {
 		filteredStatus, err := strconv.ParseBool(status)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Wrong status format"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат статуса"})
 			return
 		}
 		result := initializers.DB.Where("status = ?", filteredStatus).Find(&todos)
@@ -85,14 +91,14 @@ func ToDoIndex(c *gin.Context) {
 
 // ToDoShow godoc
 // @Summary Show a todo
-// @Description Get details of a todo by ID
+// @Description Получение todo по id
 // @Tags todos
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Todo ID"
 // @Success 200 {object} models.ToDo "Todo details"
-// @Failure 404 {string} string "Todo not found"
-// @Router /todos/{id} [get]
+// @Failure 404 {object} map[string]string "Todo not found"
+// @Router /todo/{id} [get]
 func ToDoShow(c *gin.Context) {
 	//Get param
 	id := c.Param("id")
@@ -114,17 +120,15 @@ func ToDoShow(c *gin.Context) {
 
 // ToDoUpdate godoc
 // @Summary Update a todo
-// @Description Update a todo with the specified ID
+// @Description Обновление todo по id
 // @Tags todos
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Todo ID"
-// @Param title body string false "Title of the Todo"
-// @Param body body string false "Body of the Todo"
-// @Param status body bool false "Status of the Todo"
+// @Param todo body body false "Update Todo"
 // @Success 200 {object} models.ToDo "Successfully updated"
-// @Failure 404 {string} string "Todo not found"
-// @Router /todos/{id} [put]
+// @Failure 404 {object} map[string]string "Todo not found"
+// @Router /todo/{id} [put]
 func ToDoUpdate(c *gin.Context) {
 	//Get param
 	id := c.Param("id")
@@ -139,11 +143,7 @@ func ToDoUpdate(c *gin.Context) {
 	}
 
 	//Get data
-	var body struct {
-		Title  string
-		Body   string
-		Status bool
-	}
+	var body body
 
 	c.Bind(&body)
 
@@ -162,14 +162,14 @@ func ToDoUpdate(c *gin.Context) {
 
 // ToDoDelete godoc
 // @Summary Delete a todo
-// @Description Delete a todo with the specified ID
+// @Description Удаление todo по id
 // @Tags todos
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Todo ID"
 // @Success 204 {string} string "Successfully deleted"
-// @Failure 404 {string} string "Todo not found"
-// @Router /todos/{id} [delete]
+// @Failure 404 {object} map[string]string "Todo not found"
+// @Router /todo/{id} [delete]
 func ToDoDelete(c *gin.Context) {
 	//Get param
 	id := c.Param("id")
@@ -178,7 +178,7 @@ func ToDoDelete(c *gin.Context) {
 	result := initializers.DB.Delete(&models.ToDo{}, id)
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ToDo wasn't found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
 		return
 	}
 

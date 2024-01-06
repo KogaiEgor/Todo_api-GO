@@ -7,7 +7,7 @@ WORKDIR /app
 # Копирование go модулей и их установка
 COPY go.mod ./
 COPY go.sum ./
-COPY .env ./
+
 RUN go mod download 
 
 # Копирование исходного кода

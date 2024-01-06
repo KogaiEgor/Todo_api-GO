@@ -1,4 +1,13 @@
 definitions:
+  controllers.body:
+    properties:
+      body:
+        type: string
+      status:
+        type: boolean
+      title:
+        type: string
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -27,11 +36,11 @@ definitions:
 info:
   contact: {}
 paths:
-  /todos:
+  /todo:
     get:
       consumes:
       - application/json
-      description: Get a list of todos, optionally filtered by status
+      description: Получение списка todo, опционально можно отфильтровать по статусу
       parameters:
       - description: Filter by status
         in: query
@@ -56,26 +65,16 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new todo with the input payload
+      description: |-
+        Создание нового todo
+        title должен быть не короче 3
       parameters:
-      - description: Title of the Todo
+      - description: Create Todo
         in: body
-        name: title
+        name: todo
         required: true
         schema:
-          type: string
-      - description: Body of the Todo
-        in: body
-        name: body
-        required: true
-        schema:
-          type: string
-      - description: Status of the Todo
-        in: body
-        name: status
-        required: true
-        schema:
-          type: boolean
+          $ref: '#/definitions/controllers.body'
       produces:
       - application/json
       responses:
@@ -84,17 +83,19 @@ paths:
           schema:
             $ref: '#/definitions/models.ToDo'
         "400":
-          description: Invalid request
+          description: Bad Request
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Create a new todo
       tags:
       - todos
-  /todos/{id}:
+  /todo/{id}:
     delete:
       consumes:
       - application/json
-      description: Delete a todo with the specified ID
+      description: Удаление todo по id
       parameters:
       - description: Todo ID
         in: path
@@ -111,14 +112,16 @@ paths:
         "404":
           description: Todo not found
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Delete a todo
       tags:
       - todos
     get:
       consumes:
       - application/json
-      description: Get details of a todo by ID
+      description: Получение todo по id
       parameters:
       - description: Todo ID
         in: path
@@ -135,35 +138,27 @@ paths:
         "404":
           description: Todo not found
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Show a todo
       tags:
       - todos
     put:
       consumes:
       - application/json
-      description: Update a todo with the specified ID
+      description: Обновление todo по id
       parameters:
       - description: Todo ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Title of the Todo
+      - description: Update Todo
         in: body
-        name: title
+        name: todo
         schema:
-          type: string
-      - description: Body of the Todo
-        in: body
-        name: body
-        schema:
-          type: string
-      - description: Status of the Todo
-        in: body
-        name: status
-        schema:
-          type: boolean
+          $ref: '#/definitions/controllers.body'
       produces:
       - application/json
       responses:
@@ -174,7 +169,9 @@ paths:
         "404":
           description: Todo not found
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Update a todo
       tags:
       - todos
