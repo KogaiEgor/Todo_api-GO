@@ -1,0 +1,1 @@
+docker exec todo_api go run /app/migrate/migrate.go
