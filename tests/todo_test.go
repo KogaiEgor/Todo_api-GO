@@ -170,6 +170,29 @@ func TestToDoCreate(t *testing.T) {
 	assert.Equal(t, newToDo.Status, response.ToDo.Status)
 }
 
+func TestToDoCreateWrongData(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+
+	r.POST("/todos", func(c *gin.Context) {
+		controllers.ToDoCreate(c)
+	})
+
+	newToDo := models.ToDo{
+		Title:  "N",
+		Body:   "Test ToDo Body",
+		Status: true,
+	}
+	jsonData, _ := json.Marshal(newToDo)
+
+	req, _ := http.NewRequest("POST", "/todos", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 func TestToDoShow(t *testing.T) {
 	testToDo := models.ToDo{Title: "Test ToDo", Body: "Test Body", Status: true}
 	if result := initializers.DB.Create(&testToDo); result.Error != nil {
