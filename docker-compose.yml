@@ -12,6 +12,7 @@ services:
       - DB_PASS=postgres
       - DB_NAME=GolangTodo
       - DB_PORT=5432
+      - TEST_DB_NAME=GolangTodo
       - PORT=8000
     depends_on:
       - db
