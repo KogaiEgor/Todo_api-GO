@@ -1,0 +1,181 @@
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.ToDo:
+    properties:
+      body:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      status:
+        type: boolean
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /todos:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of todos, optionally filtered by status
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of todos
+          schema:
+            items:
+              $ref: '#/definitions/models.ToDo'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: List todos
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Create a new todo with the input payload
+      parameters:
+      - description: Title of the Todo
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: Body of the Todo
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      - description: Status of the Todo
+        in: body
+        name: status
+        required: true
+        schema:
+          type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created
+          schema:
+            $ref: '#/definitions/models.ToDo'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Create a new todo
+      tags:
+      - todos
+  /todos/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a todo with the specified ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Successfully deleted
+          schema:
+            type: string
+        "404":
+          description: Todo not found
+          schema:
+            type: string
+      summary: Delete a todo
+      tags:
+      - todos
+    get:
+      consumes:
+      - application/json
+      description: Get details of a todo by ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Todo details
+          schema:
+            $ref: '#/definitions/models.ToDo'
+        "404":
+          description: Todo not found
+          schema:
+            type: string
+      summary: Show a todo
+      tags:
+      - todos
+    put:
+      consumes:
+      - application/json
+      description: Update a todo with the specified ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Title of the Todo
+        in: body
+        name: title
+        schema:
+          type: string
+      - description: Body of the Todo
+        in: body
+        name: body
+        schema:
+          type: string
+      - description: Status of the Todo
+        in: body
+        name: status
+        schema:
+          type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated
+          schema:
+            $ref: '#/definitions/models.ToDo'
+        "404":
+          description: Todo not found
+          schema:
+            type: string
+      summary: Update a todo
+      tags:
+      - todos
+swagger: "2.0"
