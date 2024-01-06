@@ -69,9 +69,10 @@ func ClearTestDB(db *gorm.DB) {
 }
 
 func TestMain(m *testing.M) {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if _, err := os.Stat("../.env"); err == nil {
+		if err := godotenv.Load("../.env"); err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	ConnectToDB()
