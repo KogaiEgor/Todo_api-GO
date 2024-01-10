@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"example/Studying/initializers"
 	"example/Studying/models"
 	"example/Studying/services"
 	"net/http"
@@ -111,13 +110,11 @@ func ToDoShow(c *gin.Context) {
 	//Get param
 	id := c.Param("id")
 
-	todoID, err := strconv.ParseUint(id, 10, 64)
-
 	todoService := services.NewTodoService()
 
-	todo, err := todoService.FindTodo(uint(todoID))
+	todo, err := todoService.FindTodo(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "ToDo doesn't exist"})
 		return
 	}
 
@@ -143,25 +140,27 @@ func ToDoUpdate(c *gin.Context) {
 	id := c.Param("id")
 
 	//Get todo
-	var todo models.ToDo
-	result := initializers.DB.Find(&todo, id)
+	todoService := services.NewTodoService()
+	todo, err := todoService.FindTodo(id)
 
-	if result.Error != nil || result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ToDo doesn't exist"})
 		return
 	}
 
 	//Get data
 	var body body
 
-	c.Bind(&body)
+	if err := c.Bind(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Wrong data format"})
+		return
+	}
 
 	//Update todo
-	initializers.DB.Model(&todo).Updates(map[string]interface{}{
-		"Title":  body.Title,
-		"Body":   body.Body,
-		"Status": body.Status,
-	})
+	if err := todoService.UpdateTodo(todo, body.Title, body.Body, body.Status); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	//Respond with updated todo
 	c.JSON(http.StatusOK, gin.H{
@@ -180,17 +179,16 @@ func ToDoUpdate(c *gin.Context) {
 // @Failure 404 {object} map[string]string "Todo not found"
 // @Router /todo/{id} [delete]
 func ToDoDelete(c *gin.Context) {
-	//Get param
+	// Get param
 	id := c.Param("id")
+	todoService := services.NewTodoService()
 
-	//Delete todo
-	result := initializers.DB.Delete(&models.ToDo{}, id)
-
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+	// Delete todo using the service
+	if err := todoService.DeleteTodo(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	//Respond with status
+	// Respond with status
 	c.Status(http.StatusNoContent)
 }
