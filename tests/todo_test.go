@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 	ConnectToDB()
 
 	if err := InitializeTestDB(DB); err != nil {
-		log.Fatalf("Ошибка при инициализации тестовой базы данных: %s", err)
+		log.Fatalf("Failed to initialize test todo: %s", err)
 	}
 
 	initializers.DB = DB
@@ -134,7 +134,7 @@ func TestToDoIndexWithStatus(t *testing.T) {
 	assert.NotEmpty(t, responseWithStatus.Todos)
 
 	for _, todo := range responseWithStatus.Todos {
-		assert.True(t, todo.Status, "Все возвращенные ToDo должны иметь статус true")
+		assert.True(t, todo.Status, "All todos have to be true")
 	}
 }
 
@@ -197,7 +197,7 @@ func TestToDoCreateWrongData(t *testing.T) {
 func TestToDoShow(t *testing.T) {
 	testToDo := models.ToDo{Title: "Test ToDo", Body: "Test Body", Status: true}
 	if result := initializers.DB.Create(&testToDo); result.Error != nil {
-		t.Fatalf("Ошибка при создании тестовой задачи: %s", result.Error)
+		t.Fatalf("Failed to initialize test todo: %s", result.Error)
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -234,7 +234,7 @@ func TestToDoShow(t *testing.T) {
 func TestToDoUpdate(t *testing.T) {
 	testToDo := models.ToDo{Title: "Original Title", Body: "Original Body", Status: true}
 	if result := initializers.DB.Create(&testToDo); result.Error != nil {
-		t.Fatalf("Ошибка при создании тестовой задачи: %s", result.Error)
+		t.Fatalf("Failed to initialize test todo: %s", result.Error)
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -279,7 +279,7 @@ func TestToDoUpdate(t *testing.T) {
 func TestToDoDelete(t *testing.T) {
 	testToDo := models.ToDo{Title: "Test ToDo", Body: "Test Body", Status: true}
 	if result := initializers.DB.Create(&testToDo); result.Error != nil {
-		t.Fatalf("Ошибка при создании тестовой задачи: %s", result.Error)
+		t.Fatalf("Failed to initialize test todo: %s", result.Error)
 	}
 
 	gin.SetMode(gin.TestMode)

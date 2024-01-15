@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"example/Studying/initializers"
 	"example/Studying/models"
+	"example/Studying/services"
 	"net/http"
 	"strconv"
 
@@ -33,20 +33,20 @@ func ToDoCreate(c *gin.Context) {
 	c.Bind(&body)
 
 	if len(body.Title) < 3 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат todo"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Title have to be more than 3 letters"})
 		return
 	}
 
-	//Create a ToDo
-	todo := models.ToDo{Title: body.Title, Body: body.Body, Status: body.Status}
-	result := initializers.DB.Create(&todo)
+	// Create a ToDo using the service
+	todoService := services.NewTodoService()
+	todo, err := todoService.CreateTodo(body.Title, body.Body, body.Status)
 
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат todo"})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Wrong todo format"})
 		return
 	}
 
-	//Return data
+	// Return data
 	c.JSON(http.StatusCreated, gin.H{
 		"todo": todo,
 	})
@@ -66,21 +66,28 @@ func ToDoIndex(c *gin.Context) {
 	//Get data
 	var todos []models.ToDo
 	status := c.Query("status")
+	todoService := services.NewTodoService()
 
 	//check param
 	if status != "" {
 		filteredStatus, err := strconv.ParseBool(status)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Неправильный формат статуса"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Wrong todo format"})
 			return
 		}
-		result := initializers.DB.Where("status = ?", filteredStatus).Find(&todos)
-		if result.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+
+		todos, err = todoService.FindByStatus(filteredStatus)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	} else {
-		initializers.DB.Find(&todos)
+		var err error
+		todos, err = todoService.GetAllTodos()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	//Respond with data
@@ -103,12 +110,11 @@ func ToDoShow(c *gin.Context) {
 	//Get param
 	id := c.Param("id")
 
-	//Get todo
-	var todo models.ToDo
-	result := initializers.DB.Find(&todo, id)
+	todoService := services.NewTodoService()
 
-	if result.Error != nil || result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+	todo, err := todoService.FindTodo(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ToDo doesn't exist"})
 		return
 	}
 
@@ -134,25 +140,27 @@ func ToDoUpdate(c *gin.Context) {
 	id := c.Param("id")
 
 	//Get todo
-	var todo models.ToDo
-	result := initializers.DB.Find(&todo, id)
+	todoService := services.NewTodoService()
+	todo, err := todoService.FindTodo(id)
 
-	if result.Error != nil || result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ToDo doesn't exist"})
 		return
 	}
 
 	//Get data
 	var body body
 
-	c.Bind(&body)
+	if err := c.Bind(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Wrong data format"})
+		return
+	}
 
 	//Update todo
-	initializers.DB.Model(&todo).Updates(map[string]interface{}{
-		"Title":  body.Title,
-		"Body":   body.Body,
-		"Status": body.Status,
-	})
+	if err := todoService.UpdateTodo(todo, body.Title, body.Body, body.Status); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	//Respond with updated todo
 	c.JSON(http.StatusOK, gin.H{
@@ -171,17 +179,16 @@ func ToDoUpdate(c *gin.Context) {
 // @Failure 404 {object} map[string]string "Todo not found"
 // @Router /todo/{id} [delete]
 func ToDoDelete(c *gin.Context) {
-	//Get param
+	// Get param
 	id := c.Param("id")
+	todoService := services.NewTodoService()
 
-	//Delete todo
-	result := initializers.DB.Delete(&models.ToDo{}, id)
-
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Элемент не найден"})
+	// Delete todo using the service
+	if err := todoService.DeleteTodo(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	//Respond with status
+	// Respond with status
 	c.Status(http.StatusNoContent)
 }
